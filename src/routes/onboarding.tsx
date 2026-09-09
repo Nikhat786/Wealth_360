@@ -1,268 +1,95 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, HeartHandshake, Lock, Plus, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { AppShell } from "@/components/wealth/app-shell";
-import { SectionHeader } from "@/components/wealth/section-header";
-import { defaultAnswers, useApp, type OnboardingAnswers } from "@/context/app-context";
-import { formatINR } from "@/lib/format";
-import { goals as baseGoals } from "@/lib/mock-data";
+import { defaultAnswers, derivedExpenses, derivedIncome, useApp, type AssetRecord, type GoalRecord, type InsurancePolicy, type LiabilityRecord, type LifeEventRecord, type OnboardingAnswers } from "@/context/app-context";
+import { formatINR, formatINRShort } from "@/lib/format";
+import { lifeStage } from "@/lib/wealth360";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding")({
-  head: () => ({
-    meta: [
-      { title: "Set up your Wealth360 plan — m.Stock" },
-      {
-        name: "description",
-        content:
-          "Four quick steps: your household, your cash flow, your protection and your goals and risk appetite.",
-      },
-      { property: "og:title", content: "Set up your Wealth360 plan — m.Stock" },
-      {
-        property: "og:description",
-        content: "Answer four short steps to generate your Wealth360 score.",
-      },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Your Wealth360 journey — m.Stock" }, { name: "description", content: "A guided financial discovery journey for your complete Wealth360 picture." }] }),
   component: Onboarding,
 });
 
-const steps = ["About you", "Cash flow", "Protection", "Goals & risk"];
+const chapters = ["About You", "Family", "Cashflow", "What You Own", "What You Owe", "Goals", "Protect", "Risk", "Future"];
+const assetTypes = ["Cash & Savings", "FD/RD", "Stocks", "Mutual Funds", "ETFs", "Bonds", "Gold/SGB", "Real Estate", "EPF/PPF/NPS", "Pension", "Other Assets"];
+const goalTypes = ["Child Education", "Retirement", "Home", "Emergency Fund", "Travel", "Marriage", "Financial Independence", "Business", "Career Break", "Wealth Creation", "Parents", "Custom"];
+const eventTypes = ["Baby", "Marriage", "Home Purchase", "Job Change", "Career Break", "Education", "Travel", "Business", "Relocation", "Retirement", "Custom"];
 
-function Onboarding() {
-  const { answers, completeOnboarding } = useApp();
+export function Onboarding() {
+  const { answers, saveOnboardingDraft, setRmOpen, startOnboarding } = useApp();
   const [draft, setDraft] = useState<OnboardingAnswers>(answers ?? defaultAnswers);
-  const [step, setStep] = useState(0);
+  const [chapter, setChapter] = useState(-1);
   const navigate = useNavigate();
+  const set = <K extends keyof OnboardingAnswers>(key: K, value: OnboardingAnswers[K]) => setDraft((current) => ({ ...current, [key]: value }));
+  const finish = () => { saveOnboardingDraft(draft); void navigate({ to: "/wealth360/review" }); };
 
-  const set = <K extends keyof OnboardingAnswers>(key: K, value: OnboardingAnswers[K]) =>
-    setDraft((d) => ({ ...d, [key]: value }));
+  useEffect(() => { startOnboarding(); }, [startOnboarding]);
 
-  const finish = () => {
-    completeOnboarding(draft);
-    void navigate({ to: "/" });
-  };
-
-  return (
-    <AppShell>
-      <div className="mx-auto max-w-2xl space-y-6">
-        <SectionHeader
-          as="h1"
-          title="Let's build your plan"
-          description={`Step ${step + 1} of ${steps.length} — ${steps[step]}`}
-        />
-
-        <div className="flex gap-2">
-          {steps.map((s, i) => (
-            <div
-              key={s}
-              className={cn(
-                "h-1.5 flex-1 rounded-full transition-colors",
-                i <= step ? "bg-primary" : "bg-muted",
-              )}
-            />
-          ))}
-        </div>
-
-        <div className="surface-card space-y-5 p-5">
-          {step === 0 && (
-            <>
-              <Field label="Your name">
-                <Input value={draft.name} onChange={(e) => set("name", e.target.value)} />
-              </Field>
-              <NumberField label="Age" value={draft.age} onChange={(v) => set("age", v)} />
-              <NumberField
-                label="Dependents"
-                value={draft.dependents}
-                onChange={(v) => set("dependents", v)}
-              />
-            </>
-          )}
-
-          {step === 1 && (
-            <>
-              <NumberField
-                label="Monthly income"
-                value={draft.monthlyIncome}
-                onChange={(v) => set("monthlyIncome", v)}
-                money
-              />
-              <NumberField
-                label="Monthly expenses"
-                value={draft.monthlyExpenses}
-                onChange={(v) => set("monthlyExpenses", v)}
-                money
-              />
-              <NumberField
-                label="Monthly investing"
-                value={draft.monthlyInvestment}
-                onChange={(v) => set("monthlyInvestment", v)}
-                money
-              />
-              <NumberField
-                label="Monthly EMIs"
-                value={draft.monthlyEmi}
-                onChange={(v) => set("monthlyEmi", v)}
-                money
-              />
-            </>
-          )}
-
-          {step === 2 && (
-            <>
-              <NumberField
-                label="Emergency savings"
-                value={draft.emergencySavings}
-                onChange={(v) => set("emergencySavings", v)}
-                money
-              />
-              <NumberField
-                label="Life cover"
-                value={draft.lifeCover}
-                onChange={(v) => set("lifeCover", v)}
-                money
-              />
-              <NumberField
-                label="Health cover"
-                value={draft.healthCover}
-                onChange={(v) => set("healthCover", v)}
-                money
-              />
-            </>
-          )}
-
-          {step === 3 && (
-            <>
-              <Field label="Which goals matter most?">
-                <div className="flex flex-wrap gap-2">
-                  {baseGoals.map((g) => {
-                    const active = draft.selectedGoals.includes(g.id);
-                    return (
-                      <button
-                        key={g.id}
-                        type="button"
-                        onClick={() =>
-                          set(
-                            "selectedGoals",
-                            active
-                              ? draft.selectedGoals.filter((id) => id !== g.id)
-                              : [...draft.selectedGoals, g.id],
-                          )
-                        }
-                        className={cn(
-                          "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                          active
-                            ? "bg-primary text-primary-foreground border-transparent"
-                            : "hover:bg-muted",
-                        )}
-                      >
-                        {active && <Check className="size-3.5" />}
-                        {g.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </Field>
-
-              <Field label={`Risk appetite — ${draft.riskAppetite} / 10`}>
-                <Slider
-                  value={[draft.riskAppetite]}
-                  min={1}
-                  max={10}
-                  step={1}
-                  onValueChange={(v) => set("riskAppetite", v[0] ?? 5)}
-                />
-              </Field>
-
-              <Field label={`Investment horizon — ${draft.horizon} years`}>
-                <Slider
-                  value={[draft.horizon]}
-                  min={1}
-                  max={30}
-                  step={1}
-                  onValueChange={(v) => set("horizon", v[0] ?? 10)}
-                />
-              </Field>
-
-              <Field label="Markets drop 20%. You…">
-                <div className="flex flex-wrap gap-2">
-                  {(["sell", "hold", "buy"] as const).map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => set("reactionToDrop", r)}
-                      className={cn(
-                        "rounded-full border px-3 py-1.5 text-xs font-medium capitalize transition-colors",
-                        draft.reactionToDrop === r
-                          ? "bg-primary text-primary-foreground border-transparent"
-                          : "hover:bg-muted",
-                      )}
-                    >
-                      {r === "sell" ? "Sell some" : r === "hold" ? "Hold tight" : "Buy more"}
-                    </button>
-                  ))}
-                </div>
-              </Field>
-            </>
-          )}
-        </div>
-
-        <div className="flex justify-between gap-3">
-          <Button
-            variant="outline"
-            disabled={step === 0}
-            onClick={() => setStep((s) => Math.max(0, s - 1))}
-          >
-            <ArrowLeft className="mr-1.5 size-4" /> Back
-          </Button>
-          {step < steps.length - 1 ? (
-            <Button onClick={() => setStep((s) => s + 1)}>
-              Continue <ArrowRight className="ml-1.5 size-4" />
-            </Button>
-          ) : (
-            <Button onClick={finish}>
-              See my score <ArrowRight className="ml-1.5 size-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-    </AppShell>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      {children}
+  if (chapter === -1) return <WelcomeStep onBegin={() => setChapter(0)} onRm={() => setRmOpen(true)} />;
+  const progress = ((chapter + 1) / chapters.length) * 100;
+  return <AppShell minimal><div className="mx-auto max-w-4xl space-y-6 py-2 sm:py-6">
+    <JourneyProgress chapter={chapter} progress={progress} />
+    <div className="space-y-1"><p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">{chapters[chapter]}</p><h1 className="font-display text-2xl font-semibold sm:text-4xl">{titleFor(chapter)}</h1><p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">{descriptionFor(chapter)}</p></div>
+    <div className="surface-card animate-in fade-in slide-in-from-bottom-2 space-y-6 p-5 duration-300 sm:p-7">
+      {chapter === 0 && <AboutStep draft={draft} set={set} />}
+      {chapter === 1 && <FamilyStep draft={draft} set={set} />}
+      {chapter === 2 && <CashflowStep draft={draft} set={set} />}
+      {chapter === 3 && <AssetsStep draft={draft} set={set} />}
+      {chapter === 4 && <LiabilitiesStep draft={draft} set={set} />}
+      {chapter === 5 && <GoalsStep draft={draft} set={set} />}
+      {chapter === 6 && <ProtectionStep draft={draft} set={set} />}
+      {chapter === 7 && <RiskStep draft={draft} set={set} />}
+      {chapter === 8 && <FutureStep draft={draft} set={set} />}
     </div>
-  );
+    <div className="flex items-center justify-between gap-3"><Button variant="outline" onClick={() => setChapter((current) => Math.max(0, current - 1))}><ArrowLeft className="size-4" /> Back</Button>{chapter === chapters.length - 1 ? <Button size="lg" onClick={finish}>Review my information <ArrowRight className="size-4" /></Button> : <Button onClick={() => setChapter((current) => current + 1)}>Save & continue <ArrowRight className="size-4" /></Button>}</div>
+  </div></AppShell>;
 }
 
-function NumberField({
-  label,
-  value,
-  onChange,
-  money,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  money?: boolean;
-}) {
-  return (
-    <Field label={money ? `${label} — ${formatINR(value)}` : label}>
-      <Input
-        type="number"
-        className="num"
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value) || 0)}
-      />
-    </Field>
-  );
+function WelcomeStep({ onBegin, onRm }: { onBegin: () => void; onRm: () => void }) {
+  const [requiredConsent, setRequiredConsent] = useState(false);
+  const [optionalInsights, setOptionalInsights] = useState(false);
+  return <AppShell minimal><div className="mx-auto max-w-3xl py-6 sm:py-12"><div className="surface-card p-6 sm:p-10"><span className="bg-gold-soft text-gold-foreground inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold"><Sparkles className="size-3.5" /> Your Wealth360 journey</span><h1 className="font-display mt-6 max-w-2xl text-3xl leading-tight font-semibold sm:text-5xl">Let&apos;s understand your financial life.</h1><p className="text-muted-foreground mt-4 max-w-2xl text-sm leading-relaxed sm:text-base">This journey takes about 5–7 minutes and helps us understand you, your family, your money and what you&apos;re building towards.</p><div className="mt-8 grid gap-3 sm:grid-cols-2">{["About You", "Family", "Cashflow", "Assets", "Liabilities", "Goals", "Protection", "Risk & Future"].map((item) => <div key={item} className="bg-muted/50 flex items-center gap-3 rounded-xl p-3 text-sm"><span className="bg-success-soft text-success flex size-7 items-center justify-center rounded-full"><Check className="size-4" /></span>{item}</div>)}</div><div className="bg-secondary/60 mt-8 rounded-xl p-4"><div className="flex items-start gap-3"><Lock className="text-muted-foreground mt-0.5 size-4 shrink-0" /><div><p className="text-sm font-semibold">Before we begin</p><p className="text-muted-foreground mt-1 text-xs leading-relaxed">We&apos;ll use the information you choose to personalise Wealth360. You can review, update or stop the journey at any time. Insights are educational and do not trigger transactions.</p></div></div><label className="mt-4 flex cursor-pointer items-start gap-3 text-xs"><input type="checkbox" checked={requiredConsent} onChange={(event) => setRequiredConsent(event.target.checked)} className="mt-0.5 accent-[var(--color-primary)]" /><span>I understand and agree to provide information for my personalised Wealth360 journey. <strong>Required</strong></span></label><label className="text-muted-foreground mt-3 flex cursor-pointer items-start gap-3 text-xs"><input type="checkbox" checked={optionalInsights} onChange={(event) => setOptionalInsights(event.target.checked)} className="mt-0.5 accent-[var(--color-primary)]" /><span>Send me optional personalised insights and reminders.</span></label></div><div className="mt-8 flex flex-wrap gap-3"><Button size="lg" disabled={!requiredConsent} onClick={onBegin}>Begin my journey <ArrowRight className="size-4" /></Button><Button size="lg" variant="outline" onClick={onRm}><HeartHandshake className="size-4" /> Connect with RM</Button></div></div></div></AppShell>;
 }
+
+function JourneyProgress({ chapter, progress }: { chapter: number; progress: number }) { return <div className="space-y-3"><div className="flex items-end justify-between gap-4"><div><p className="text-muted-foreground num text-xs font-semibold tracking-wide uppercase">Your wealth journey</p><p className="font-display mt-1 text-sm font-semibold">{String(chapter + 1).padStart(2, "0")} {chapters[chapter]}</p></div><span className="text-muted-foreground num text-xs">Step {chapter + 1} of {chapters.length}</span></div><div className="bg-muted h-1.5 overflow-hidden rounded-full"><div className="gradient-gold h-full transition-all duration-500" style={{ width: `${progress}%` }} /></div><div className="hidden gap-1 overflow-x-auto pb-1 md:flex">{chapters.map((item, index) => <span key={item} className={cn("shrink-0 text-[10px] font-medium", index <= chapter ? "text-foreground" : "text-muted-foreground")}>{String(index + 1).padStart(2, "0")} {item}</span>)}</div></div>; }
+
+function titleFor(chapter: number) { return ["First, tell us a little about you.", "Who are you building your wealth for?", "Where does your money come from and where does it go?", "Let's map what you've already built.", "Every wealth journey has two sides.", "Your wealth should have a purpose.", "What could protect your family?", "How does your money behave under pressure?", "Life doesn't always follow the plan.", "We've got your story."][chapter]; }
+function descriptionFor(chapter: number) { return ["Your life stage helps us personalise the questions and priorities that matter most.", "A useful financial plan reflects the people and moments you care about.", "We'll show the flow of money, not a score. The analysis comes later.", "Add investments one at a time so the details remain meaningful.", "Understanding debt helps us decide whether your next rupee should go toward investing, saving or repayment.", "Choose the milestones that deserve a place in your plan. You can refine them later.", "We'll compare what you already have against what your family may need.", "A simple scenario helps us understand your investment personality.", "Capture changes that may shape your future plan.", "Check the chapters you've shared before we build your Wealth360."][chapter]; }
+
+function AboutStep({ draft, set }: Props) { return <div className="grid gap-4 sm:grid-cols-2"><Field label="Full name"><Input value={draft.name} onChange={(e) => set("name", e.target.value)} /></Field><NumberField label="Age" value={draft.age} onChange={(v) => set("age", v)} /><Field label="Gender (optional)"><Select value={draft.gender} options={["Female", "Male", "Non-binary", "Prefer not to say"]} onChange={(v) => set("gender", v as OnboardingAnswers["gender"])} /></Field><Field label="Marital status"><Select value={draft.maritalStatus} options={["Single", "Married"]} onChange={(v) => set("maritalStatus", v as OnboardingAnswers["maritalStatus"])} /></Field><Field label="Occupation"><Input value={draft.occupation} onChange={(e) => set("occupation", e.target.value)} /></Field><Field label="Employer / business"><Input value={draft.employer} onChange={(e) => set("employer", e.target.value)} /></Field><NumberField label="Annual income" value={draft.annualIncome} onChange={(v) => set("annualIncome", v)} money /><NumberField label="Monthly take-home" value={draft.monthlyTakeHome} onChange={(v) => set("monthlyTakeHome", v)} money /><NumberField label="Expected income growth %" value={draft.expectedIncomeGrowth} onChange={(v) => set("expectedIncomeGrowth", v)} /><Field label="City"><Input value={draft.city} onChange={(e) => set("city", e.target.value)} /></Field><NumberField label="Retirement age" value={draft.retirementAge} onChange={(v) => set("retirementAge", v)} /><NumberField label="Dependents" value={draft.dependents} onChange={(v) => set("dependents", v)} /><div className="bg-secondary/60 flex items-start gap-3 rounded-xl p-4 sm:col-span-2"><Sparkles className="text-gold-foreground mt-0.5 size-4 shrink-0" /><p className="text-muted-foreground text-xs leading-relaxed">You are in your <strong className="text-foreground">{lifeStage(draft.age, draft.dependents)}</strong> stage. We use this only to make the journey more relevant.</p></div></div>; }
+
+function FamilyStep({ draft, set }: Props) { const [member, setMember] = useState<FamilyMemberDraft>({ name: "", relation: "Child", age: 0, dependency: "Full", needs: "" }); const add = () => { if (!member.name.trim()) return; set("familyMembers", [...draft.familyMembers, { ...member, id: `family-${Date.now()}` }]); setMember({ name: "", relation: "Child", age: 0, dependency: "Full", needs: "" }); }; return <div className="space-y-5"><div className="grid gap-3 sm:grid-cols-2">{draft.familyMembers.map((person) => <RecordCard key={person.id} title={person.name} subtitle={`${person.relation} · ${person.age} years · ${person.dependency} dependency`} onRemove={() => set("familyMembers", draft.familyMembers.filter((item) => item.id !== person.id))}><p className="text-muted-foreground text-xs">{person.needs || "No specific need added yet"}</p></RecordCard>)}</div><div className="grid gap-3 rounded-xl border border-dashed p-4 sm:grid-cols-2"><Field label="Name"><Input value={member.name} onChange={(e) => setMember({ ...member, name: e.target.value })} placeholder="Add family member" /></Field><Field label="Relationship"><Select value={member.relation} options={["Spouse", "Child", "Parent", "Other"]} onChange={(v) => setMember({ ...member, relation: v as FamilyMemberDraft["relation"] })} /></Field><NumberField label="Age" value={member.age} onChange={(v) => setMember({ ...member, age: v })} /><Field label="Financial dependency"><Select value={member.dependency} options={["Full", "Partial", "None"]} onChange={(v) => setMember({ ...member, dependency: v as FamilyMemberDraft["dependency"] })} /></Field><Field label="Important financial needs"><Input value={member.needs} onChange={(e) => setMember({ ...member, needs: e.target.value })} placeholder="Education, care, home..." /></Field><Button type="button" variant="secondary" className="self-end" onClick={add}><Plus className="size-4" /> Add family member</Button></div></div>; }
+
+function CashflowStep({ draft, set }: Props) { const income = derivedIncome(draft); const expenses = derivedExpenses(draft); const surplus = income - expenses; const incomeFields: Array<[string, keyof OnboardingAnswers]> = [["Salary", "salary"], ["Business", "businessIncome"], ["Rental", "rentalIncome"], ["Dividend", "dividendsIncome"], ["Interest", "interestIncome"], ["Other", "otherIncome"]]; const expenseFields: Array<[string, keyof OnboardingAnswers]> = [["Household", "household"], ["Education", "schoolFees"], ["EMI", "emiExpenses"], ["Insurance", "insuranceExpenses"], ["Healthcare", "healthcareExpenses"], ["Lifestyle", "lifestyle"], ["Travel", "travelExpenses"], ["Other", "otherExpenses"]]; return <div className="space-y-6"><MoneyGroup title="Income sources" fields={incomeFields} draft={draft} set={set} /><MoneyGroup title="Monthly expenses" fields={expenseFields} draft={draft} set={set} /><div className="bg-secondary grid gap-4 rounded-xl p-4 sm:grid-cols-3"><FlowMetric label="Monthly income" value={income} /><FlowMetric label="Monthly expenses" value={expenses} /><FlowMetric label="Future surplus" value={surplus} tone={surplus >= 0 ? "success" : "destructive"} /><p className="text-muted-foreground text-xs sm:col-span-3">INCOME <ArrowRight className="mx-1 inline size-3" /> EXPENSES <ArrowRight className="mx-1 inline size-3" /> AVAILABLE FOR YOUR FUTURE</p></div></div>; }
+
+function AssetsStep({ draft, set }: Props) { const [selected, setSelected] = useState("Stocks"); const [form, setForm] = useState<Partial<AssetRecord>>({ type: "Stocks", risk: "Moderate", liquidity: "Medium", ownership: "Self", startDate: "" }); const add = () => { if (!form.name?.trim()) return; const record: AssetRecord = { id: `asset-${Date.now()}`, name: form.name, type: selected, investedValue: form.investedValue ?? 0, currentValue: form.currentValue ?? 0, startDate: form.startDate ?? "", holdingPeriod: form.holdingPeriod ?? 0, actualReturn: form.actualReturn ?? 0, expectedReturn: form.expectedReturn ?? 10, risk: form.risk ?? "Moderate", liquidity: form.liquidity ?? "Medium", taxTreatment: form.taxTreatment ?? "To review", incomeGenerated: form.incomeGenerated ?? 0, linkedGoal: form.linkedGoal ?? "", ownership: form.ownership ?? "Self", details: {} }; set("assets", [...draft.assets, record]); setForm({ type: selected, risk: "Moderate", liquidity: "Medium", ownership: "Self", startDate: "" }); }; return <div className="space-y-6"><div><p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">Choose what you want to add</p><div className="flex flex-wrap gap-2">{assetTypes.map((type) => <button key={type} type="button" onClick={() => { setSelected(type); setForm({ ...form, type }); }} className={cn("rounded-full border px-3 py-2 text-xs font-medium transition-colors", selected === type ? "bg-primary text-primary-foreground border-transparent" : "hover:bg-muted")}>{type}</button>)}</div></div><div className="bg-muted/40 rounded-xl p-4"><p className="font-display text-base font-semibold">Add {selected}</p><p className="text-muted-foreground mt-1 text-xs">Capture the details that make this investment meaningful.</p><div className="mt-4 grid gap-4 sm:grid-cols-2"><Field label="Name"><Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={selected === "Stocks" ? "e.g. HDFC Bank" : "Give it a name"} /></Field><NumberField label="Invested value" value={form.investedValue ?? 0} onChange={(v) => setForm({ ...form, investedValue: v })} money /><NumberField label="Current value" value={form.currentValue ?? 0} onChange={(v) => setForm({ ...form, currentValue: v })} money /><Field label="Start date"><Input type="date" value={form.startDate ?? ""} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></Field><NumberField label="Holding period (years)" value={form.holdingPeriod ?? 0} onChange={(v) => setForm({ ...form, holdingPeriod: v })} /><NumberField label="Actual return %" value={form.actualReturn ?? 0} onChange={(v) => setForm({ ...form, actualReturn: v })} /><NumberField label="Expected return %" value={form.expectedReturn ?? 10} onChange={(v) => setForm({ ...form, expectedReturn: v })} /><Field label="Risk"><Select value={form.risk ?? "Moderate"} options={["Low", "Moderate", "High"]} onChange={(v) => setForm({ ...form, risk: v as AssetRecord["risk"] })} /></Field><Field label="Liquidity"><Select value={form.liquidity ?? "Medium"} options={["High", "Medium", "Low"]} onChange={(v) => setForm({ ...form, liquidity: v as AssetRecord["liquidity"] })} /></Field><Field label="Linked goal"><Input value={form.linkedGoal ?? ""} onChange={(e) => setForm({ ...form, linkedGoal: e.target.value })} placeholder="Optional" /></Field><Field label="Ownership"><Input value={form.ownership ?? "Self"} onChange={(e) => setForm({ ...form, ownership: e.target.value })} /></Field><Field label="Tax treatment"><Input value={form.taxTreatment ?? ""} onChange={(e) => setForm({ ...form, taxTreatment: e.target.value })} placeholder="ELSS, equity LTCG..." /></Field></div><Button type="button" className="mt-4" onClick={add}><Plus className="size-4" /> Add investment</Button></div><div className="grid gap-3 sm:grid-cols-2">{draft.assets.map((asset) => <RecordCard key={asset.id} title={asset.name} subtitle={`${asset.type} · ${formatINRShort(asset.currentValue)} current`} onRemove={() => set("assets", draft.assets.filter((item) => item.id !== asset.id))}><p className="text-muted-foreground text-xs">Invested {formatINRShort(asset.investedValue)} · {asset.actualReturn}% actual return · {asset.risk} risk</p></RecordCard>)}</div></div>; }
+
+function LiabilitiesStep({ draft, set }: Props) { const [form, setForm] = useState<Partial<LiabilityRecord>>({ type: "Home Loan", rateType: "Floating", startDate: "", endDate: "" }); const add = () => { if (!form.provider?.trim()) return; const record: LiabilityRecord = { id: `liability-${Date.now()}`, provider: form.provider, type: form.type ?? "Other", originalAmount: form.originalAmount ?? 0, outstandingAmount: form.outstandingAmount ?? 0, interestRate: form.interestRate ?? 0, emi: form.emi ?? 0, startDate: form.startDate ?? "", originalTenure: form.originalTenure ?? 0, remainingTenure: form.remainingTenure ?? 0, endDate: form.endDate ?? "", rateType: form.rateType ?? "Floating", prepaymentOption: form.prepaymentOption ?? false, prepaymentPenalty: form.prepaymentPenalty ?? 0 }; set("liabilities", [...draft.liabilities, record]); setForm({ type: "Home Loan", rateType: "Floating", startDate: "", endDate: "" }); }; return <div className="space-y-6"><div className="grid gap-4 sm:grid-cols-2"><Field label="Provider"><Input value={form.provider ?? ""} onChange={(e) => setForm({ ...form, provider: e.target.value })} placeholder="Bank or lender" /></Field><Field label="Debt type"><Select value={form.type ?? "Home Loan"} options={["Home Loan", "Personal Loan", "Vehicle Loan", "Credit Card", "Education Loan", "Other"]} onChange={(v) => setForm({ ...form, type: v })} /></Field><NumberField label="Original amount" value={form.originalAmount ?? 0} onChange={(v) => setForm({ ...form, originalAmount: v })} money /><NumberField label="Outstanding amount" value={form.outstandingAmount ?? 0} onChange={(v) => setForm({ ...form, outstandingAmount: v })} money /><NumberField label="Interest rate %" value={form.interestRate ?? 0} onChange={(v) => setForm({ ...form, interestRate: v })} /><NumberField label="Monthly EMI" value={form.emi ?? 0} onChange={(v) => setForm({ ...form, emi: v })} money /><NumberField label="Original tenure (years)" value={form.originalTenure ?? 0} onChange={(v) => setForm({ ...form, originalTenure: v })} /><NumberField label="Remaining tenure (years)" value={form.remainingTenure ?? 0} onChange={(v) => setForm({ ...form, remainingTenure: v })} /><Field label="Rate type"><Select value={form.rateType ?? "Floating"} options={["Fixed", "Floating"]} onChange={(v) => setForm({ ...form, rateType: v as LiabilityRecord["rateType"] })} /></Field><Field label="End date"><Input type="date" value={form.endDate ?? ""} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></Field></div><Button type="button" onClick={add}><Plus className="size-4" /> Add liability</Button><div className="grid gap-3 sm:grid-cols-2">{draft.liabilities.map((loan) => <RecordCard key={loan.id} title={loan.provider} subtitle={`${loan.type} · ${formatINRShort(loan.outstandingAmount)} outstanding`} onRemove={() => set("liabilities", draft.liabilities.filter((item) => item.id !== loan.id))}><p className="text-muted-foreground text-xs">{loan.interestRate}% {loan.rateType} · EMI {formatINR(loan.emi)} · {loan.remainingTenure} years left</p></RecordCard>)}</div><p className="bg-gold-soft text-gold-foreground rounded-xl p-4 text-xs">We'll later help you explore &quot;Should I invest more or repay debt?&quot; without giving final advice during onboarding.</p></div>; }
+
+function GoalsStep({ draft, set }: Props) { const [form, setForm] = useState<Partial<GoalRecord>>({ priority: "Medium", expectedReturn: 10, inflation: 6 }); const add = () => { if (!form.name?.trim()) return; const record: GoalRecord = { id: `goal-${Date.now()}`, name: form.name, currentAmount: form.currentAmount ?? 0, targetAmount: form.targetAmount ?? 0, targetYear: form.targetYear ?? new Date().getFullYear() + 10, duration: form.duration ?? 10, monthlyContribution: form.monthlyContribution ?? 0, expectedReturn: form.expectedReturn ?? 10, inflation: form.inflation ?? 6, priority: form.priority ?? "Medium", linkedInvestments: [], fundingSource: form.fundingSource ?? "Monthly contributions" }; set("goals", [...draft.goals, record]); set("selectedGoals", [...new Set([...draft.selectedGoals, record.name])]); setForm({ priority: "Medium", expectedReturn: 10, inflation: 6 }); }; return <div className="space-y-6"><div className="grid gap-4 sm:grid-cols-2"><Field label="Goal type"><Select value={form.name ?? "Retirement"} options={goalTypes} onChange={(v) => setForm({ ...form, name: v })} /></Field><NumberField label="Current amount" value={form.currentAmount ?? 0} onChange={(v) => setForm({ ...form, currentAmount: v })} money /><NumberField label="Target amount" value={form.targetAmount ?? 0} onChange={(v) => setForm({ ...form, targetAmount: v })} money /><NumberField label="Target year" value={form.targetYear ?? new Date().getFullYear() + 10} onChange={(v) => setForm({ ...form, targetYear: v })} /><NumberField label="Monthly contribution" value={form.monthlyContribution ?? 0} onChange={(v) => setForm({ ...form, monthlyContribution: v })} money /><NumberField label="Expected return %" value={form.expectedReturn ?? 10} onChange={(v) => setForm({ ...form, expectedReturn: v })} /><NumberField label="Inflation assumption %" value={form.inflation ?? 6} onChange={(v) => setForm({ ...form, inflation: v })} /><Field label="Priority"><Select value={form.priority ?? "Medium"} options={["High", "Medium", "Low"]} onChange={(v) => setForm({ ...form, priority: v as GoalRecord["priority"] })} /></Field></div><Button type="button" onClick={add}><Plus className="size-4" /> Add goal</Button><div className="grid gap-3 sm:grid-cols-2">{draft.goals.map((goal) => <RecordCard key={goal.id} title={goal.name} subtitle={`${formatINRShort(goal.targetAmount)} target by ${goal.targetYear}`} onRemove={() => set("goals", draft.goals.filter((item) => item.id !== goal.id))}><p className="text-muted-foreground text-xs">{formatINR(goal.monthlyContribution)}/month · {goal.priority} priority · {goal.inflation}% inflation assumption</p></RecordCard>)}</div></div>; }
+
+function ProtectionStep({ draft, set }: Props) { const [form, setForm] = useState<Partial<InsurancePolicy>>({ type: "Life", startDate: "", renewalDate: "" }); const add = () => { if (!form.insurer?.trim()) return; const policy: InsurancePolicy = { id: `policy-${Date.now()}`, insurer: form.insurer, type: form.type ?? "Life", sumAssured: form.sumAssured ?? 0, premium: form.premium ?? 0, term: form.term ?? 0, startDate: form.startDate ?? "", renewalDate: form.renewalDate ?? "", nominee: form.nominee ?? "", coveredMembers: form.coveredMembers ?? [] }; set("insurancePolicies", [...draft.insurancePolicies, policy]); setForm({ type: "Life", startDate: "", renewalDate: "" }); }; return <div className="space-y-6"><div className="grid gap-4 sm:grid-cols-2"><Field label="Policy type"><Select value={form.type ?? "Life"} options={["Life", "Health", "Personal Accident"]} onChange={(v) => setForm({ ...form, type: v as InsurancePolicy["type"] })} /></Field><Field label="Insurer"><Input value={form.insurer ?? ""} onChange={(e) => setForm({ ...form, insurer: e.target.value })} placeholder="Provider name" /></Field><NumberField label="Sum assured" value={form.sumAssured ?? 0} onChange={(v) => setForm({ ...form, sumAssured: v })} money /><NumberField label="Premium" value={form.premium ?? 0} onChange={(v) => setForm({ ...form, premium: v })} money /><NumberField label="Policy term (years)" value={form.term ?? 0} onChange={(v) => setForm({ ...form, term: v })} /><Field label="Nominee"><Input value={form.nominee ?? ""} onChange={(e) => setForm({ ...form, nominee: e.target.value })} /></Field><Field label="Renewal date"><Input type="date" value={form.renewalDate ?? ""} onChange={(e) => setForm({ ...form, renewalDate: e.target.value })} /></Field></div><Button type="button" onClick={add}><Plus className="size-4" /> Add policy</Button><div className="grid gap-3 sm:grid-cols-2">{draft.insurancePolicies.map((policy) => <RecordCard key={policy.id} title={policy.insurer} subtitle={`${policy.type} · ${formatINRShort(policy.sumAssured)} cover`} onRemove={() => set("insurancePolicies", draft.insurancePolicies.filter((item) => item.id !== policy.id))}><p className="text-muted-foreground text-xs">Premium {formatINR(policy.premium)} · Nominee {policy.nominee || "Not added"}</p></RecordCard>)}</div><div className="bg-secondary grid gap-4 rounded-xl p-4 sm:grid-cols-3"><FlowMetric label="Life cover" value={draft.lifeCover} /><FlowMetric label="Health cover" value={draft.healthCover} /><FlowMetric label="Emergency fund" value={draft.cashSavings} /></div></div>; }
+
+function RiskStep({ draft, set }: Props) { return <div className="space-y-6"><div className="bg-secondary rounded-xl p-5"><p className="font-display text-base font-semibold">My ₹10L portfolio falls to ₹8L. What would you do?</p><div className="mt-4 flex flex-wrap gap-2">{["sell", "hold", "buy"].map((choice) => <Choice key={choice} label={choice === "sell" ? "Sell" : choice === "hold" ? "Wait" : "Invest more"} active={draft.reactionToDrop === choice} onClick={() => set("reactionToDrop", choice as OnboardingAnswers["reactionToDrop"])} />)}</div></div><Field label={`Investment horizon — ${draft.horizon} years`}><Slider value={[draft.horizon]} min={1} max={30} step={1} onValueChange={(v) => set("horizon", v[0] ?? 10)} /></Field><Field label={`Risk comfort — ${draft.riskAppetite} / 10`}><Slider value={[draft.riskAppetite]} min={1} max={10} step={1} onValueChange={(v) => set("riskAppetite", v[0] ?? 5)} /></Field><div className="grid gap-4 sm:grid-cols-2"><Field label="Liquidity preference"><Select value={draft.liquidityPreference} options={["High", "Medium", "Low"]} onChange={(v) => set("liquidityPreference", v as OnboardingAnswers["liquidityPreference"])} /></Field><NumberField label="Monthly investment capacity" value={draft.monthlyInvestment} onChange={(v) => set("monthlyInvestment", v)} money /></div><p className="text-muted-foreground text-xs">This helps us understand your investment personality. It is not a recommendation or a score.</p></div>; }
+
+function FutureStep({ draft, set }: Props) { const [form, setForm] = useState<Partial<LifeEventRecord>>({ event: "Retirement", importance: "Medium" }); const add = () => { if (!form.event) return; const event: LifeEventRecord = { id: `event-${Date.now()}`, event: form.event, year: form.year ?? new Date().getFullYear() + 5, estimatedCost: form.estimatedCost ?? 0, importance: form.importance ?? "Medium" }; set("futureEvents", [...draft.futureEvents, event]); set("lifeEvents", [...new Set([...draft.lifeEvents, event.event])]); setForm({ event: "Retirement", importance: "Medium" }); }; return <div className="space-y-6"><div className="grid gap-4 sm:grid-cols-2"><Field label="Life event"><Select value={form.event ?? "Retirement"} options={eventTypes} onChange={(v) => setForm({ ...form, event: v })} /></Field><NumberField label="Expected year" value={form.year ?? new Date().getFullYear() + 5} onChange={(v) => setForm({ ...form, year: v })} /><NumberField label="Estimated cost" value={form.estimatedCost ?? 0} onChange={(v) => setForm({ ...form, estimatedCost: v })} money /><Field label="Importance"><Select value={form.importance ?? "Medium"} options={["High", "Medium", "Low"]} onChange={(v) => setForm({ ...form, importance: v as LifeEventRecord["importance"] })} /></Field></div><Button type="button" onClick={add}><Plus className="size-4" /> Add future event</Button><div className="grid gap-3 sm:grid-cols-2">{draft.futureEvents.map((event) => <RecordCard key={event.id} title={event.event} subtitle={`${event.year} · ${event.importance} importance`} onRemove={() => set("futureEvents", draft.futureEvents.filter((item) => item.id !== event.id))}><p className="text-muted-foreground text-xs">Estimated cost {formatINRShort(event.estimatedCost)}</p></RecordCard>)}</div></div>; }
+
+function ReviewStep({ draft }: { draft: OnboardingAnswers }) { const rows = [["ABOUT YOU", `${draft.name}, ${draft.age}`], ["FAMILY", `${draft.familyMembers.length} members`], ["CASHFLOW", `${formatINRShort(derivedIncome(draft))} monthly income`], ["ASSETS", `${draft.assets.length} detailed records`], ["LIABILITIES", `${draft.liabilities.length} liabilities`], ["GOALS", `${draft.goals.length} goals`], ["PROTECTION", `${draft.insurancePolicies.length} policies`], ["RISK", `${draft.riskAppetite}/10 risk comfort`], ["FUTURE", `${draft.futureEvents.length} events`]]; return <div className="space-y-3">{rows.map(([label, value]) => <div key={label} className="bg-success-soft flex items-center gap-3 rounded-xl p-3"><Check className="text-success size-4" /><div><p className="text-success text-xs font-semibold">{label}</p><p className="text-muted-foreground mt-0.5 text-xs">{value}</p></div><span className="text-success/70 ml-auto text-xs">Ready</span></div>)}<div className="bg-secondary/60 mt-5 flex items-start gap-3 rounded-xl p-4"><Lock className="text-muted-foreground mt-0.5 size-4 shrink-0" /><p className="text-muted-foreground text-xs leading-relaxed">You're in control. This information is provided by you, used to personalise Wealth360, and can be edited later. No transaction happens automatically.</p></div></div>; }
+
+function MoneyGroup({ title, fields, draft, set }: { title: string; fields: Array<[string, keyof OnboardingAnswers]>; draft: OnboardingAnswers; set: Props["set"] }) { return <div><p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">{title}</p><div className="grid gap-4 sm:grid-cols-2">{fields.map(([label, key]) => <NumberField key={key} label={label} value={draft[key] as number} onChange={(v) => set(key, v as never)} money />)}</div></div>; }
+function RecordCard({ title, subtitle, children, onRemove }: { title: string; subtitle: string; children: ReactNode; onRemove: () => void }) { return <div className="bg-muted/50 flex items-start gap-3 rounded-xl p-4"><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{title}</p><p className="text-muted-foreground mt-1 text-xs">{subtitle}</p><div className="mt-2">{children}</div></div><button type="button" className="text-muted-foreground hover:text-destructive" aria-label={`Remove ${title}`} onClick={onRemove}><Trash2 className="size-4" /></button></div>; }
+function Field({ label, children }: { label: string; children: ReactNode }) { return <div className="space-y-2"><Label>{label}</Label>{children}</div>; }
+function NumberField({ label, value, onChange, money }: { label: string; value: number; onChange: (value: number) => void; money?: boolean }) { return <Field label={money ? `${label} — ${formatINR(value)}` : label}><Input type="number" className="num" value={value} onChange={(e) => onChange(Number(e.target.value) || 0)} /></Field>; }
+function Select({ value, options, onChange }: { value: string; options: string[]; onChange: (value: string) => void }) { return <div className="relative"><select value={value} onChange={(e) => onChange(e.target.value)} className="border-input bg-background h-9 w-full appearance-none rounded-md border px-3 pr-9 text-sm outline-none focus:ring-1 focus:ring-ring">{options.map((option) => <option key={option} value={option}>{option.replaceAll("-", " ")}</option>)}</select><ChevronDown className="text-muted-foreground pointer-events-none absolute top-2.5 right-3 size-4" /></div>; }
+function Choice({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) { return <button type="button" onClick={onClick} className={cn("rounded-full border px-3 py-2 text-xs font-medium capitalize", active ? "bg-primary text-primary-foreground border-transparent" : "hover:bg-muted")}>{active && <Check className="mr-1 inline size-3" />}{label}</button>; }
+function FlowMetric({ label, value, tone }: { label: string; value: number; tone?: "success" | "destructive" }) { return <div><p className="text-muted-foreground text-[11px] font-medium uppercase">{label}</p><p className={cn("num mt-1 text-sm font-semibold", tone === "success" && "text-success", tone === "destructive" && "text-destructive")}>{Math.abs(value) > 1000 ? formatINRShort(value) : value}</p></div>; }
+
+type Props = { draft: OnboardingAnswers; set: <K extends keyof OnboardingAnswers>(key: K, value: OnboardingAnswers[K]) => void };
+type FamilyMemberDraft = Omit<OnboardingAnswers["familyMembers"][number], "id">;

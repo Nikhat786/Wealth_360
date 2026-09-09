@@ -4,6 +4,7 @@ import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis
 
 import { AppShell } from "@/components/wealth/app-shell";
 import { InsightCard } from "@/components/wealth/insight-card";
+import { PillarNav } from "@/components/wealth/pillar-nav";
 import { SectionHeader } from "@/components/wealth/section-header";
 import { StatTile } from "@/components/wealth/stat-tile";
 import { formatINR, formatINRShort, formatPlainPct } from "@/lib/format";
@@ -60,6 +61,8 @@ function InsightsPage() {
           title="Insights"
           description="What your numbers say, and the one move that follows from each."
         />
+
+        <PillarNav />
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile tone="navy" label="Monthly income" value={formatINR(monthlyCashflow.income)} />

@@ -1,8 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { AppShell } from "@/components/wealth/app-shell";
+import { Button } from "@/components/ui/button";
 import { HoldingsTable } from "@/components/wealth/holdings-table";
+import { PillarNav } from "@/components/wealth/pillar-nav";
 import { SectionHeader } from "@/components/wealth/section-header";
 import { StatTile } from "@/components/wealth/stat-tile";
 import { formatINR, formatINRShort, formatPlainPct } from "@/lib/format";
@@ -55,6 +57,8 @@ function PortfolioPage() {
           title="Portfolio"
           description={`${holdings.length} holdings across ${allocation.length} asset classes.`}
         />
+
+        <PillarNav />
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile tone="navy" label="Current value" value={formatINRShort(totalAssets)} />
@@ -126,6 +130,7 @@ function PortfolioPage() {
 
         <div className="surface-card p-5">
           <SectionHeader title="Loans" description="Outstanding balances and EMIs." />
+          <Button asChild variant="outline" size="sm" className="mt-3"><Link to="/debt">Open Debt Optimiser</Link></Button>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {liabilities.map((l) => (
               <div key={l.id} className="rounded-xl border p-4">

@@ -22,6 +22,29 @@ interface Rule {
   reply: (score: number) => CoachReply;
 }
 
+export interface CoachContext {
+  score: number;
+  grade: string;
+  pillars: unknown;
+  lifeCover: number;
+  healthCover: number;
+  criticalIllness: number;
+  protection: number;
+  transferReadiness: number;
+  nomineesMissing: string[];
+  unnominatedValue: number;
+  monthlySip: number;
+  monthlyIncome: number;
+  monthlyExpenses: number;
+  monthlyEmi: number;
+  emergencyMonths: number;
+  goalsOffTrack: number;
+  goalsShortfall: number;
+  taxHeadroom: number;
+  idleSurplus: number;
+  topAction: string | null;
+}
+
 const rules: Rule[] = [
   {
     match: /score|improve|wealth360|rating|grade/i,
@@ -129,7 +152,8 @@ const rules: Rule[] = [
   },
 ];
 
-export function coachReply(question: string, score: number): CoachReply {
+export function coachReply(question: string, context: CoachContext): CoachReply {
+  const { score } = context;
   for (const rule of rules) {
     if (rule.match.test(question)) return rule.reply(score);
   }

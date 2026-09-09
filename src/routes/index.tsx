@@ -5,7 +5,6 @@ import {
   Landmark,
   PiggyBank,
   TrendingUp,
-  Wallet,
 } from "lucide-react";
 import {
   Area,
@@ -19,24 +18,24 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/wealth/app-shell";
-import { GoalCard } from "@/components/wealth/goal-card";
+import { AttentionPanel } from "@/components/wealth/attention-panel";
+import { StressMode } from "@/components/wealth/stress-mode";
+import { PillarNav } from "@/components/wealth/pillar-nav";
 import { ScoreGauge } from "@/components/wealth/score-gauge";
 import { SectionHeader } from "@/components/wealth/section-header";
 import { StatTile } from "@/components/wealth/stat-tile";
-import { useApp } from "@/context/app-context";
+import { WealthMap, mapIcons, type MapNode } from "@/components/wealth/wealth-map";
+import { derivedExpenses, derivedIncome, useApp } from "@/context/app-context";
 import { formatINR, formatINRShort } from "@/lib/format";
+import { projectGoal } from "@/lib/goal-math";
 import {
-  actionItems,
-  monthlyCashflow,
   netWorthHistory,
-  recentTransactions,
   totalAssets,
   totalInvested,
   totalLiabilities,
   netWorth,
   user,
 } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,51 +56,79 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-const severityStyles = {
-  high: "bg-destructive-soft text-destructive",
-  medium: "bg-gold-soft text-gold-foreground",
-  low: "bg-secondary text-secondary-foreground",
-};
-
-function Dashboard() {
-  const { score, goals } = useApp();
+export function Dashboard() {
+  const {
+    answers,
+    score,
+    goals,
+    protection,
+    wealthReadiness,
+    wealthContinuity,
+    nextAction,
+    stressMode,
+    setStressMode,
+  } = useApp();
+  const income = derivedIncome(answers);
+  const expenses = derivedExpenses(answers);
+  const surplus = income - expenses;
   const gain = totalAssets - totalInvested;
+  const mapNodes: MapNode[] = [
+    {
+      id: "cashflow",
+      layer: "Cashflow",
+      icon: mapIcons.cashflow,
+      headline: `${formatINRShort(surplus)} monthly surplus`,
+      detail: `${formatINRShort(income)} income against ${formatINRShort(expenses)} expenses.`,
+      tone: surplus > 0 ? "success" : "destructive",
+    },
+    {
+      id: "assets",
+      layer: "Assets",
+      icon: mapIcons.assets,
+      headline: formatINRShort(totalAssets),
+      detail: `${formatINRShort(totalInvested)} invested across your portfolio.`,
+      tone: "navy",
+    },
+    {
+      id: "goals",
+      layer: "Goals",
+      icon: mapIcons.goals,
+      headline: `${goals.length} goals in motion`,
+      detail: `${goals.filter((goal) => goal.monthlyContribution > 0).length} have active monthly contributions.`,
+      tone: "gold",
+    },
+  ];
+
+  if (stressMode) {
+    return <AppShell><StressMode /></AppShell>;
+  }
 
   return (
     <AppShell>
       <div className="space-y-8">
         <SectionHeader
           as="h1"
-          title={`Good to see you, ${user.firstName}`}
-          description="Here's how your money is doing today."
+          title={`Good morning, ${answers.name.split(" ")[0] || user.firstName}.`}
+          description="Here's your financial life at a glance."
           action={
-            <Button asChild variant="outline">
-              <Link to="/insights">
-                View insights <ArrowRight className="ml-1.5 size-4" />
-              </Link>
-            </Button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button variant="outline" onClick={() => setStressMode(true)}>
+                Feeling overwhelmed?
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/insights">
+                  View insights <ArrowRight className="ml-1.5 size-4" />
+                </Link>
+              </Button>
+            </div>
           }
         />
 
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="surface-card flex items-center gap-5 p-5 lg:col-span-1">
-            <ScoreGauge
-              score={score.total}
-              grade={score.grade}
-              gradeLabel={score.gradeLabel}
-              size={148}
-            />
-            <div className="min-w-0 space-y-2">
-              <p className="text-sm font-semibold">Wealth360 score</p>
-              <p className="text-muted-foreground text-xs">
-                Weakest pillar: {score.pillars.slice().sort((a, b) => a.score - b.score)[0]?.label}
-              </p>
-              <Button asChild size="sm" variant="secondary">
-                <Link to="/score">See breakdown</Link>
-              </Button>
-            </div>
-          </div>
+        <div className="surface-card flex items-center gap-3 px-4 py-3 sm:gap-4 sm:px-5"><ScoreGauge score={score.total} grade={score.grade} gradeLabel={score.gradeLabel} size={82} compact /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-muted-foreground text-[10px] font-semibold tracking-wide uppercase">Financial Health</p><span className="bg-gold-soft text-gold-foreground whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold">{score.grade} · {score.gradeLabel}</span></div><p className="mt-0.5 text-sm font-semibold">{score.total} / 100</p><p className="text-muted-foreground mt-0.5 hidden text-xs sm:block">Your current financial position, explained.</p></div><Button asChild variant="outline" size="sm"><Link to="/score">Understand your score <ArrowRight className="size-3.5" /></Link></Button></div>
 
+        <section><SectionHeader title="Your Wealth360" description="Where you are today, what comes next, and what carries forward." /><div className="surface-card mt-3 grid divide-y p-1 sm:grid-cols-3 sm:divide-x sm:divide-y-0"><Dimension label="Wealth Health" value={score.total} description="Healthy today" tone="health" /><Dimension label="Wealth Readiness" value={wealthReadiness} description="Preparing for tomorrow" tone="readiness" /><Dimension label="Wealth Continuity" value={wealthContinuity} description="Family preparedness" tone="continuity" /></div></section>
+
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
             <StatTile
               tone="navy"
@@ -127,8 +154,8 @@ function Dashboard() {
             />
             <StatTile
               label="Monthly investing"
-              value={formatINR(monthlyCashflow.investments)}
-              sub={`of ${formatINR(monthlyCashflow.income)} income`}
+              value={formatINR(surplus)}
+              sub={`${Math.max(0, Math.round((surplus / Math.max(1, income)) * 100))}% savings rate`}
               icon={PiggyBank}
             />
           </div>
@@ -191,74 +218,60 @@ function Dashboard() {
           </div>
         </div>
 
-        <div>
-          <SectionHeader
-            title="Next best actions"
-            description="Ordered by the score impact each one unlocks."
-          />
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {actionItems.map((a) => (
-              <div key={a.id} className="surface-card flex items-start gap-3 p-4">
-                <span
-                  className={cn(
-                    "num rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                    severityStyles[a.severity],
-                  )}
-                >
-                  {a.impact}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold">{a.title}</p>
-                  <p className="text-muted-foreground mt-1 text-xs">{a.detail}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div><AttentionPanel limit={3} /></div>
+          <div className="surface-card flex flex-col justify-between p-5"><div><p className="text-muted-foreground text-[11px] font-semibold tracking-wide uppercase">Next best action</p><h2 className="font-display mt-2 text-lg font-semibold">{nextAction?.title ?? "Your financial picture is in good shape"}</h2><p className="text-muted-foreground mt-2 text-xs leading-relaxed">{nextAction?.detail ?? "Review your Wealth360 regularly as life changes."}</p></div><Button asChild size="sm" className="mt-5 self-start"><Link to={nextAction?.to ?? "/score"}>Take action <ArrowRight className="size-3.5" /></Link></Button></div>
         </div>
 
-        <div>
+        <section>
           <SectionHeader
             title="Your goals"
-            description="Five goals tracked with live projections."
-            action={
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/goals">All goals</Link>
-              </Button>
-            }
+            description="Are you on track for the things that matter to you?"
+            action={<Button asChild variant="ghost" size="sm"><Link to="/goals">View all goals <ArrowRight className="size-3.5" /></Link></Button>}
           />
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {goals.slice(0, 3).map((g) => (
-              <GoalCard key={g.id} goal={g} compact />
-            ))}
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {goals
+              .map((goal) => ({ goal, projection: projectGoal(goal, goal.monthlyContribution) }))
+              .sort((a, b) => Number(a.projection.onTrack) - Number(b.projection.onTrack))
+              .map(({ goal, projection }) => (
+                <Link key={goal.id} to="/goals/$goalId" params={{ goalId: goal.id }} className="surface-card hover:shadow-raised p-4 transition-shadow">
+                  <div className="flex items-start justify-between gap-2"><p className="truncate text-sm font-semibold">{goal.name}</p><span className={projection.onTrack ? "bg-success-soft text-success" : "bg-warning-soft text-warning-foreground"}>{projection.onTrack ? "On track" : "Needs attention"}</span></div>
+                  <p className="text-muted-foreground num mt-2 text-xs">{formatINRShort(goal.saved)} → {formatINRShort(goal.target)} · {goal.targetYear}</p>
+                  <div className="bg-muted mt-3 h-1.5 overflow-hidden rounded-full"><div className={projection.onTrack ? "bg-success h-full" : "bg-gold h-full"} style={{ width: `${Math.min(100, projection.fundedPct)}%` }} /></div>
+                  <p className="text-muted-foreground num mt-2 text-[11px]">Progress {Math.round(projection.fundedPct)}%{projection.onTrack ? "" : ` · Needs ${formatINR(Math.round(projection.requiredMonthly))}/mo`}</p>
+                </Link>
+              ))}
+          </div>
+        </section>
+
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <SectionHeader
+              title="Your financial X-ray"
+              description="The few numbers that explain the shape of your financial life."
+            />
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <StatTile label="Monthly income" value={formatINRShort(income)} sub="All recurring inflows" />
+              <StatTile label="Monthly expenses" value={formatINRShort(expenses)} sub="Household and lifestyle" />
+              <StatTile label="Protection score" value={`${protection}/100`} sub="Life, health and critical illness" />
+              <StatTile label="Total liabilities" value={formatINRShort(totalLiabilities)} sub="Loans and outstanding dues" />
+            </div>
+          </div>
+          <div>
+            <SectionHeader title="At a glance" description="Know what is changing before you act." />
+            <div className="mt-4">
+              <WealthMap nodes={mapNodes} />
+            </div>
           </div>
         </div>
 
-        <div className="surface-card p-5">
-          <SectionHeader title="Recent activity" description="Last six money movements." />
-          <ul className="mt-3 divide-y">
-            {recentTransactions.map((t) => (
-              <li key={t.id} className="flex items-center gap-3 py-3">
-                <span className="bg-muted text-muted-foreground flex size-9 items-center justify-center rounded-xl">
-                  <Wallet className="size-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{t.label}</p>
-                  <p className="text-muted-foreground num text-xs">{t.date}</p>
-                </div>
-                <span
-                  className={cn(
-                    "num text-sm font-semibold",
-                    t.amount < 0 ? "text-foreground" : "text-success",
-                  )}
-                >
-                  {t.amount < 0 ? "−" : "+"}
-                  {formatINR(Math.abs(t.amount))}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <section className="surface-card p-5"><SectionHeader title="Explore Wealth360" description="Go deeper into your wealth journey." /><div className="mt-4"><PillarNav compact /></div></section>
       </div>
     </AppShell>
   );
+}
+
+function Dimension({ label, value, description, tone }: { label: string; value: number; description: string; tone: "health" | "readiness" | "continuity" }) {
+  const toneClass = { health: "border-success/30", readiness: "border-primary/30", continuity: "border-gold/40" }[tone];
+  return <div className={`border-l-2 px-4 py-3 first:border-l-0 ${toneClass}`}><div className="flex items-baseline justify-between gap-2"><p className="text-xs font-semibold sm:text-sm">{label}</p><p className="font-display text-xl font-semibold">{value}<span className="text-muted-foreground text-[10px] font-normal"> / 100</span></p></div><p className="text-muted-foreground mt-0.5 text-[11px]">{description}</p></div>;
 }

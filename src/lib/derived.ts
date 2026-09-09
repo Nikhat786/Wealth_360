@@ -97,12 +97,12 @@ export function lifeCoverNeedsBreakdown(annualIncome: number, goalsShortfall: nu
 }
 
 export type ActionRoute =
-  | "/protect"
-  | "/transfer"
-  | "/grow"
-  | "/goals"
   | "/score"
-  | "/wealth-map";
+  | "/know"
+  | "/portfolio"
+  | "/debt"
+  | "/goals"
+  ;
 
 export interface DerivedAction {
   id: string;
@@ -142,7 +142,7 @@ export function buildActions(ctx: ActionContext): DerivedAction[] {
       detail: `Your family needs about 10x income plus loan payoff. You are short ${crore(lifeGap)}.`,
       impact: "+9 to your score",
       severity: "high",
-      to: "/protect",
+      to: "/score",
       cta: "Review cover",
       weight: 9,
     });
@@ -154,7 +154,7 @@ export function buildActions(ctx: ActionContext): DerivedAction[] {
       detail: `${crore(nom.totalValue - nom.coveredValue)} of your wealth has no nominee on record.`,
       impact: "+7 transfer readiness",
       severity: "high",
-      to: "/transfer",
+      to: "/know",
       cta: "Add nominees",
       weight: 8,
     });
@@ -178,7 +178,7 @@ export function buildActions(ctx: ActionContext): DerivedAction[] {
       detail: "A family floater plus a super top-up is the cheapest way to close this.",
       impact: "+4 to your score",
       severity: "medium",
-      to: "/protect",
+      to: "/score",
       cta: "See options",
       weight: 4,
     });
@@ -190,7 +190,7 @@ export function buildActions(ctx: ActionContext): DerivedAction[] {
       detail: "With a home loan running, a lump-sum payout keeps the EMIs safe.",
       impact: "+3 to your score",
       severity: "medium",
-      to: "/protect",
+      to: "/score",
       cta: "See options",
       weight: 3,
     });
@@ -202,7 +202,7 @@ export function buildActions(ctx: ActionContext): DerivedAction[] {
       detail: "80C, 80CCD(1B) and 80D headroom is still open for this financial year.",
       impact: "Saves tax now",
       severity: "medium",
-      to: "/grow",
+      to: "/portfolio",
       cta: "Open tax saver",
       weight: 3,
     });
@@ -214,7 +214,7 @@ export function buildActions(ctx: ActionContext): DerivedAction[] {
       detail: "Savings interest is 3% against roughly 6.9% in a liquid fund.",
       impact: "+3 to your score",
       severity: "medium",
-      to: "/grow",
+      to: "/portfolio",
       cta: "Plan it",
       weight: 3,
     });
@@ -238,7 +238,7 @@ export function buildActions(ctx: ActionContext): DerivedAction[] {
       detail: `EMIs are ${ctx.emiRatioPct.toFixed(0)}% of income. The car loan is your costliest debt.`,
       impact: "+4 to your score",
       severity: "medium",
-      to: "/grow",
+      to: "/debt",
       cta: "Compare options",
       weight: 4,
     });
@@ -250,7 +250,7 @@ export function buildActions(ctx: ActionContext): DerivedAction[] {
       detail: `It is ${ctx.largestAssetSharePct.toFixed(0)}% of the portfolio today.`,
       impact: "+2 to your score",
       severity: "low",
-      to: "/wealth-map",
+      to: "/know",
       cta: "See the map",
       weight: 2,
     });
@@ -262,7 +262,7 @@ export function buildActions(ctx: ActionContext): DerivedAction[] {
       detail: "An annual step-up matched to your raise doubles the corpus over 15 years.",
       impact: "+3 to your score",
       severity: "low",
-      to: "/grow",
+      to: "/portfolio",
       cta: "Simulate it",
       weight: 2,
     });
@@ -274,7 +274,7 @@ export function buildActions(ctx: ActionContext): DerivedAction[] {
       detail: "A will and an asset register sit above nominations, not beside them.",
       impact: "+5 transfer readiness",
       severity: "low",
-      to: "/transfer",
+      to: "/know",
       cta: "Open checklist",
       weight: 2,
     });

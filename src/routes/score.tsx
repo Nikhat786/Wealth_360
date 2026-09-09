@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { AppShell } from "@/components/wealth/app-shell";
 import { PillarBar } from "@/components/wealth/pillar-bar";
+import { PillarNav } from "@/components/wealth/pillar-nav";
 import { ScoreGauge } from "@/components/wealth/score-gauge";
 import { SectionHeader } from "@/components/wealth/section-header";
 import { useApp } from "@/context/app-context";
@@ -50,9 +51,11 @@ function ScorePage() {
       <div className="space-y-8">
         <SectionHeader
           as="h1"
-          title="Your Wealth360 score"
-          description="Six weighted pillars, scored out of 100 and refreshed every month."
+          title="Financial Health"
+          description="One indicative view of how your financial position is doing today, and what can improve next."
         />
+
+        <PillarNav />
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_1fr]">
           <div className="surface-card flex flex-col items-center gap-3 p-6">
@@ -100,7 +103,7 @@ function ScorePage() {
         </div>
 
         <div>
-          <SectionHeader title="Pillar breakdown" description="Where your points come from." />
+          <SectionHeader title="Why is this score?" description="The supporting pillars explain what is shaping your Financial Health." />
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {shown.pillars.map((p) => (
               <div key={p.key} className="surface-card p-4">

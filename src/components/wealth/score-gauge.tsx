@@ -7,6 +7,7 @@ interface ScoreGaugeProps {
   size?: number;
   compareTo?: number;
   className?: string;
+  compact?: boolean;
 }
 
 export function ScoreGauge({
@@ -16,6 +17,7 @@ export function ScoreGauge({
   size = 200,
   compareTo,
   className,
+  compact = false,
 }: ScoreGaugeProps) {
   const stroke = size * 0.085;
   const r = (size - stroke) / 2;
@@ -78,9 +80,11 @@ export function ScoreGauge({
           {score}
         </span>
         <span className="text-muted-foreground mt-1 text-xs">out of 100</span>
-        <span className="bg-gold-soft text-gold-foreground mt-2 rounded-full px-2.5 py-0.5 text-xs font-semibold">
-          {grade} · {gradeLabel}
-        </span>
+        {!compact && (
+          <span className="bg-gold-soft text-gold-foreground mt-2 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold">
+            {grade} · {gradeLabel}
+          </span>
+        )}
       </div>
     </div>
   );

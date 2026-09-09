@@ -10,18 +10,33 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AnalysisRouteImport } from './routes/analysis'
 import { Route as CoachRouteImport } from './routes/coach'
+import { Route as DebtRouteImport } from './routes/debt'
 import { Route as InsightsRouteImport } from './routes/insights'
+import { Route as KnowRouteImport } from './routes/know'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ScoreRouteImport } from './routes/score'
+import { Route as TransferRouteImport } from './routes/transfer'
+import { Route as Wealth360RouteImport } from './routes/wealth360'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as GoalsIndexRouteImport } from './routes/goals.index'
 import { Route as GoalsGoalIdRouteImport } from './routes/goals.$goalId'
+import { Route as Wealth360AnalysisRouteImport } from './routes/wealth360.analysis'
+import { Route as Wealth360DashboardRouteImport } from './routes/wealth360.dashboard'
+import { Route as Wealth360JourneyRouteImport } from './routes/wealth360.journey'
+import { Route as Wealth360ReviewRouteImport } from './routes/wealth360.review'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalysisRoute = AnalysisRouteImport.update({
+  id: '/analysis',
+  path: '/analysis',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoachRoute = CoachRouteImport.update({
@@ -29,9 +44,19 @@ const CoachRoute = CoachRouteImport.update({
   path: '/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DebtRoute = DebtRouteImport.update({
+  id: '/debt',
+  path: '/debt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InsightsRoute = InsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KnowRoute = KnowRouteImport.update({
+  id: '/know',
+  path: '/know',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -54,6 +79,21 @@ const ScoreRoute = ScoreRouteImport.update({
   path: '/score',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TransferRoute = TransferRouteImport.update({
+  id: '/transfer',
+  path: '/transfer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Wealth360Route = Wealth360RouteImport.update({
+  id: '/wealth360',
+  path: '/wealth360',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GoalsIndexRoute = GoalsIndexRouteImport.update({
   id: '/goals/',
   path: '/goals/',
@@ -64,85 +104,171 @@ const GoalsGoalIdRoute = GoalsGoalIdRouteImport.update({
   path: '/goals/$goalId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Wealth360AnalysisRoute = Wealth360AnalysisRouteImport.update({
+  id: '/analysis',
+  path: '/analysis',
+  getParentRoute: () => Wealth360Route,
+} as any)
+const Wealth360DashboardRoute = Wealth360DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => Wealth360Route,
+} as any)
+const Wealth360JourneyRoute = Wealth360JourneyRouteImport.update({
+  id: '/journey',
+  path: '/journey',
+  getParentRoute: () => Wealth360Route,
+} as any)
+const Wealth360ReviewRoute = Wealth360ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => Wealth360Route,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analysis': typeof AnalysisRoute
   '/coach': typeof CoachRoute
+  '/debt': typeof DebtRoute
   '/insights': typeof InsightsRoute
+  '/know': typeof KnowRoute
   '/onboarding': typeof OnboardingRoute
   '/portfolio': typeof PortfolioRoute
   '/profile': typeof ProfileRoute
   '/score': typeof ScoreRoute
+  '/transfer': typeof TransferRoute
+  '/wealth360': typeof Wealth360RouteWithChildren
+  '/welcome': typeof WelcomeRoute
   '/goals/$goalId': typeof GoalsGoalIdRoute
+  '/wealth360/analysis': typeof Wealth360AnalysisRoute
+  '/wealth360/dashboard': typeof Wealth360DashboardRoute
+  '/wealth360/journey': typeof Wealth360JourneyRoute
+  '/wealth360/review': typeof Wealth360ReviewRoute
   '/goals/': typeof GoalsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analysis': typeof AnalysisRoute
   '/coach': typeof CoachRoute
+  '/debt': typeof DebtRoute
   '/insights': typeof InsightsRoute
+  '/know': typeof KnowRoute
   '/onboarding': typeof OnboardingRoute
   '/portfolio': typeof PortfolioRoute
   '/profile': typeof ProfileRoute
   '/score': typeof ScoreRoute
+  '/transfer': typeof TransferRoute
+  '/wealth360': typeof Wealth360RouteWithChildren
+  '/welcome': typeof WelcomeRoute
   '/goals/$goalId': typeof GoalsGoalIdRoute
+  '/wealth360/analysis': typeof Wealth360AnalysisRoute
+  '/wealth360/dashboard': typeof Wealth360DashboardRoute
+  '/wealth360/journey': typeof Wealth360JourneyRoute
+  '/wealth360/review': typeof Wealth360ReviewRoute
   '/goals': typeof GoalsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/analysis': typeof AnalysisRoute
   '/coach': typeof CoachRoute
+  '/debt': typeof DebtRoute
   '/insights': typeof InsightsRoute
+  '/know': typeof KnowRoute
   '/onboarding': typeof OnboardingRoute
   '/portfolio': typeof PortfolioRoute
   '/profile': typeof ProfileRoute
   '/score': typeof ScoreRoute
+  '/transfer': typeof TransferRoute
+  '/wealth360': typeof Wealth360RouteWithChildren
+  '/welcome': typeof WelcomeRoute
   '/goals/$goalId': typeof GoalsGoalIdRoute
+  '/wealth360/analysis': typeof Wealth360AnalysisRoute
+  '/wealth360/dashboard': typeof Wealth360DashboardRoute
+  '/wealth360/journey': typeof Wealth360JourneyRoute
+  '/wealth360/review': typeof Wealth360ReviewRoute
   '/goals/': typeof GoalsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/analysis'
     | '/coach'
+    | '/debt'
     | '/insights'
+    | '/know'
     | '/onboarding'
     | '/portfolio'
     | '/profile'
     | '/score'
+    | '/transfer'
+    | '/wealth360'
+    | '/welcome'
     | '/goals/$goalId'
+    | '/wealth360/analysis'
+    | '/wealth360/dashboard'
+    | '/wealth360/journey'
+    | '/wealth360/review'
     | '/goals/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/analysis'
     | '/coach'
+    | '/debt'
     | '/insights'
+    | '/know'
     | '/onboarding'
     | '/portfolio'
     | '/profile'
     | '/score'
+    | '/transfer'
+    | '/wealth360'
+    | '/welcome'
     | '/goals/$goalId'
+    | '/wealth360/analysis'
+    | '/wealth360/dashboard'
+    | '/wealth360/journey'
+    | '/wealth360/review'
     | '/goals'
   id:
     | '__root__'
     | '/'
+    | '/analysis'
     | '/coach'
+    | '/debt'
     | '/insights'
+    | '/know'
     | '/onboarding'
     | '/portfolio'
     | '/profile'
     | '/score'
+    | '/transfer'
+    | '/wealth360'
+    | '/welcome'
     | '/goals/$goalId'
+    | '/wealth360/analysis'
+    | '/wealth360/dashboard'
+    | '/wealth360/journey'
+    | '/wealth360/review'
     | '/goals/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnalysisRoute: typeof AnalysisRoute
   CoachRoute: typeof CoachRoute
+  DebtRoute: typeof DebtRoute
   InsightsRoute: typeof InsightsRoute
+  KnowRoute: typeof KnowRoute
   OnboardingRoute: typeof OnboardingRoute
   PortfolioRoute: typeof PortfolioRoute
   ProfileRoute: typeof ProfileRoute
   ScoreRoute: typeof ScoreRoute
+  TransferRoute: typeof TransferRoute
+  Wealth360Route: typeof Wealth360RouteWithChildren
+  WelcomeRoute: typeof WelcomeRoute
   GoalsGoalIdRoute: typeof GoalsGoalIdRoute
   GoalsIndexRoute: typeof GoalsIndexRoute
 }
@@ -156,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/analysis': {
+      id: '/analysis'
+      path: '/analysis'
+      fullPath: '/analysis'
+      preLoaderRoute: typeof AnalysisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/coach': {
       id: '/coach'
       path: '/coach'
@@ -163,11 +296,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoachRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/debt': {
+      id: '/debt'
+      path: '/debt'
+      fullPath: '/debt'
+      preLoaderRoute: typeof DebtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/insights': {
       id: '/insights'
       path: '/insights'
       fullPath: '/insights'
       preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/know': {
+      id: '/know'
+      path: '/know'
+      fullPath: '/know'
+      preLoaderRoute: typeof KnowRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -198,6 +345,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScoreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/transfer': {
+      id: '/transfer'
+      path: '/transfer'
+      fullPath: '/transfer'
+      preLoaderRoute: typeof TransferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wealth360': {
+      id: '/wealth360'
+      path: '/wealth360'
+      fullPath: '/wealth360'
+      preLoaderRoute: typeof Wealth360RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/goals/': {
       id: '/goals/'
       path: '/goals'
@@ -212,17 +380,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GoalsGoalIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wealth360/analysis': {
+      id: '/wealth360/analysis'
+      path: '/analysis'
+      fullPath: '/wealth360/analysis'
+      preLoaderRoute: typeof Wealth360AnalysisRouteImport
+      parentRoute: typeof Wealth360Route
+    }
+    '/wealth360/dashboard': {
+      id: '/wealth360/dashboard'
+      path: '/dashboard'
+      fullPath: '/wealth360/dashboard'
+      preLoaderRoute: typeof Wealth360DashboardRouteImport
+      parentRoute: typeof Wealth360Route
+    }
+    '/wealth360/journey': {
+      id: '/wealth360/journey'
+      path: '/journey'
+      fullPath: '/wealth360/journey'
+      preLoaderRoute: typeof Wealth360JourneyRouteImport
+      parentRoute: typeof Wealth360Route
+    }
+    '/wealth360/review': {
+      id: '/wealth360/review'
+      path: '/review'
+      fullPath: '/wealth360/review'
+      preLoaderRoute: typeof Wealth360ReviewRouteImport
+      parentRoute: typeof Wealth360Route
+    }
   }
 }
 
+interface Wealth360RouteChildren {
+  Wealth360AnalysisRoute: typeof Wealth360AnalysisRoute
+  Wealth360DashboardRoute: typeof Wealth360DashboardRoute
+  Wealth360JourneyRoute: typeof Wealth360JourneyRoute
+  Wealth360ReviewRoute: typeof Wealth360ReviewRoute
+}
+
+const Wealth360RouteChildren: Wealth360RouteChildren = {
+  Wealth360AnalysisRoute: Wealth360AnalysisRoute,
+  Wealth360DashboardRoute: Wealth360DashboardRoute,
+  Wealth360JourneyRoute: Wealth360JourneyRoute,
+  Wealth360ReviewRoute: Wealth360ReviewRoute,
+}
+
+const Wealth360RouteWithChildren = Wealth360Route._addFileChildren(
+  Wealth360RouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnalysisRoute: AnalysisRoute,
   CoachRoute: CoachRoute,
+  DebtRoute: DebtRoute,
   InsightsRoute: InsightsRoute,
+  KnowRoute: KnowRoute,
   OnboardingRoute: OnboardingRoute,
   PortfolioRoute: PortfolioRoute,
   ProfileRoute: ProfileRoute,
   ScoreRoute: ScoreRoute,
+  TransferRoute: TransferRoute,
+  Wealth360Route: Wealth360RouteWithChildren,
+  WelcomeRoute: WelcomeRoute,
   GoalsGoalIdRoute: GoalsGoalIdRoute,
   GoalsIndexRoute: GoalsIndexRoute,
 }

@@ -4,7 +4,7 @@ import { BadgeCheck, CalendarCheck, Headset, Mail, Phone, RefreshCw, Star } from
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/wealth/app-shell";
 import { SectionHeader } from "@/components/wealth/section-header";
-import { useApp } from "@/context/app-context";
+import { derivedEmi, derivedExpenses, derivedIncome, useApp } from "@/context/app-context";
 import { formatINR } from "@/lib/format";
 import { rm, user } from "@/lib/mock-data";
 
@@ -66,11 +66,11 @@ function ProfilePage() {
             <dl className="mt-4 space-y-2.5 text-sm">
               <Row label="Age" value={`${answers.age}`} />
               <Row label="Dependents" value={`${answers.dependents}`} />
-              <Row label="Monthly income" value={formatINR(answers.monthlyIncome)} />
-              <Row label="Monthly expenses" value={formatINR(answers.monthlyExpenses)} />
+              <Row label="Monthly income" value={formatINR(derivedIncome(answers))} />
+              <Row label="Monthly expenses" value={formatINR(derivedExpenses(answers))} />
               <Row label="Monthly investing" value={formatINR(answers.monthlyInvestment)} />
-              <Row label="Monthly EMIs" value={formatINR(answers.monthlyEmi)} />
-              <Row label="Emergency savings" value={formatINR(answers.emergencySavings)} />
+              <Row label="Monthly EMIs" value={formatINR(derivedEmi(answers))} />
+              <Row label="Emergency savings" value={formatINR(answers.cashSavings)} />
               <Row label="Life cover" value={formatINR(answers.lifeCover)} />
               <Row label="Health cover" value={formatINR(answers.healthCover)} />
               <Row label="Risk appetite" value={`${answers.riskAppetite} / 10`} />
